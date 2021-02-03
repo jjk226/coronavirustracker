@@ -18,60 +18,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class CoronavirusDataService {
+public interface CoronavirusDataService {
 
-    private static String VIRUS_DATA_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv";
+    public void fetchData() throws IOException, InterruptedException;
 
-    private List<LocationStat> locationStats = new ArrayList<>();
+    public List<LocationStat> getLocationStats();
 
-    @PostConstruct
-    @Scheduled(cron="* * 1 * * *")
-    public void fetchData() throws IOException, InterruptedException {
-        List<LocationStat> newLocationStats = new ArrayList<>();
+    public int getTotalCases();
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(VIRUS_DATA_URL)).build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    public int getTotalChange();
 
-        StringReader csvBodyReader = new StringReader(response.body());
-        Iterable<CSVRecord> records = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(csvBodyReader);
-
-        for (CSVRecord record : records) {
-
-            LocationStat tempLocationStat = new LocationStat();
-
-            tempLocationStat.setState(record.get("Province/State"));
-            tempLocationStat.setCountry(record.get("Country/Region"));
-            int latest = Integer.valueOf(record.get(record.size() - 1));
-            tempLocationStat.setLatest(latest);
-            int previous = Integer.valueOf(record.get(record.size() - 2));
-            tempLocationStat.setPrevious(previous);
-            tempLocationStat.setChange(latest - previous);
-
-            newLocationStats.add(tempLocationStat);
-        }
-
-        this.locationStats = newLocationStats;
-
-        for (LocationStat location: this.locationStats) {
-            System.out.println(location);
-        }
-    }
-
-    public List<LocationStat> getLocationStats() {
-        return this.locationStats;
-    }
-
-    public int getTotalCases() {
-        int totalCases = this.locationStats.stream().mapToInt(location -> location.getLatest()).sum();
-
-        return totalCases;
-    }
-
-    public int getTotalChange() {
-        int totalChange = this.locationStats.stream().mapToInt(location -> location.getChange()).sum();
-
-        return totalChange;
-    }
+    public LocationStat getByCountry(String country);
 
 }
