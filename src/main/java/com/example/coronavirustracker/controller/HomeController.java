@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -29,10 +30,19 @@ public class HomeController {
     }
 
     @GetMapping("/{country}")
-    public void getCountry(@PathVariable String country) {
+    public String getCountry(@PathVariable String country, Model model) {
         LocationStat stat = this.dataService.getByCountry(country);
+        List<LocationStat> locations = new ArrayList<>();
+        locations.add(stat);
 
-        System.out.println(stat.toString());
+        int totalCases = stat.getLatest();
+        int totalChange = stat.getChange();
+
+        model.addAttribute("totalCases", totalCases);
+        model.addAttribute("totalChange", totalChange);
+        model.addAttribute("locations", locations);
+
+        return "home";
 
     }
 }
